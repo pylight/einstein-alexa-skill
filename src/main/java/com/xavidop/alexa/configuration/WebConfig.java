@@ -1,16 +1,36 @@
 package com.xavidop.alexa.configuration;
 
 import com.amazon.ask.servlet.ServletConstants;
+import com.xavidop.alexa.gpt.GptClient;
 import com.xavidop.alexa.properties.PropertiesUtils;
 import com.xavidop.alexa.servlet.AlexaServlet;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServlet;
 
 @Configuration
-public class WebConfig {
+public class WebConfig
+{
+    @Bean
+    public GptClient gptClient(@Value("${openai.model}") String model, @Value("${openai.api.url}") String apiUrl, RestTemplate restTemplate, @Value("${openai.api.url}")  String systemRoleText)
+    {
+        return new GptClient(model, apiUrl, restTemplate, systemRoleText);
+    }
+
+    @Bean
+    public RestTemplate openaiRestTemplate(@Value("${openai.api.key:#{environment.OPENAI_API_KEY}}") String openaiApiKey) {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add((request, body, execution) -> {
+            request.getHeaders().add("Authorization", "Bearer " + openaiApiKey);
+            return execution.execute(request, body);
+        });
+        return restTemplate;
+    }
+
     @Bean
     public ServletRegistrationBean<HttpServlet> alexaServlet() {
 
@@ -18,7 +38,8 @@ public class WebConfig {
 
         ServletRegistrationBean<HttpServlet> servRegBean = new ServletRegistrationBean<>();
         servRegBean.setServlet(new AlexaServlet());
-        servRegBean.addUrlMappings("/alexa/*");
+
+        servRegBean.addUrlMappings(PropertiesUtils.getPropertyValue(Constants.ALEXA_SKILL_ROOT_PATH_KEY) + "*");
         servRegBean.setLoadOnStartup(1);
         return servRegBean;
     }
@@ -26,8 +47,6 @@ public class WebConfig {
     private void loadProperties() {
         System.setProperty(ServletConstants.TIMESTAMP_TOLERANCE_SYSTEM_PROPERTY, PropertiesUtils.getPropertyValue(ServletConstants.TIMESTAMP_TOLERANCE_SYSTEM_PROPERTY));
         System.setProperty(ServletConstants.DISABLE_REQUEST_SIGNATURE_CHECK_SYSTEM_PROPERTY, PropertiesUtils.getPropertyValue(ServletConstants.DISABLE_REQUEST_SIGNATURE_CHECK_SYSTEM_PROPERTY));
-        System.setProperty(Constants.SSL_KEYSTORE_FILE_PATH_KEY, Constants.SSL_KEYSTORE_FILE_PATH_KEY);
-        System.setProperty(Constants.SSL_KEYSTORE_PASSWORD_KEY, Constants.SSL_KEYSTORE_PASSWORD_KEY);
     }
 
 }
