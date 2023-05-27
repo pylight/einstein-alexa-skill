@@ -3,9 +3,9 @@ plugins {
     id 'java'
 }
 
-group 'cam.xavidop.alexa'
+group 'einstein'
 version '1.0-SNAPSHOT'
-description 'Alexa Java Spring Boot HelloWorld'
+description 'Self-Hosted Alexa Skill that queries GPT3.5 and can also respond to follow-up questions'
 
 sourceCompatibility = 19
 targetCompatibility = 19
@@ -38,5 +38,5 @@ test {
 }
 
 bootJar {
-    mainClass = 'com.xavidop.alexa.AlexaSkillAppStarter'
+    mainClass = 'einstein.AlexaSkillAppStarter'
 }
